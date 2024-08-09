@@ -9,28 +9,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func tokenParser(token *jwt.Token) (interface{}, error) {
+func TokenParser(token *jwt.Token) (interface{}, error) {
 	// check if the signing method of the token is one we are looking for
 	_, ok := token.Method.(*jwt.SigningMethodHMAC)
-
 	if !ok {
 		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 	}
 
-	// return jwtSecret which will later be used for verify token signature
 	return data.JwtSecret, nil
 }
 
 // this is where the authorization action is performed
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		// JWT VALIDATION LOGIC
-
 		// get authorization header
 		authHeader := c.GetHeader("Authorization")
-
-		// check if authorization header is empty
 		if authHeader == "" {
 			c.IndentedJSON(401, gin.H{"error": "Authorization header is required"})
 			c.Abort()
@@ -46,11 +39,10 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.Parse(authParts[1], tokenParser)
-
 		// check if...
 		// no error occured during parsing
 		// the JWT token is valid (signatures verified and claims validated)
+		token, err := jwt.Parse(authParts[1], TokenParser)
 		if err != nil || !token.Valid {
 			c.IndentedJSON(401, gin.H{"error": "invalid JWT"})
 			c.Abort()
